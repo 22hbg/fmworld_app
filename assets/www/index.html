@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>FM-World News</title>
+		<link rel="stylesheet" href="themes/fmworld.css" />
+		<link rel="stylesheet" href="jquery.mobile.structure-1.1.0.min.css" />
+		<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+		<script src="jquery.mobile-1.1.0.min.js"></script>
+		<style>
+		.ui-page {
+			-webkit-backface-visibility: hidden;
+			-webkit-transform:translate3d(0,0,0);
+		}
+		</style>
+
+	</head>	
+	<body>
+		<div id="page" data-role="page" data-theme="a">
+			<div style='margin: 3px 10px;'>
+			<h3 style="float: left;">FM-World News</h3>
+			<a href='#' style="float: right;" data-role='button' class='ui-btn-right' data-icon='refresh' onclick="update_rss(); return false">Aggiorna</a>
+			<div style="clear: both;"></div>
+			</div>
+			<div id="msg" data-theme="a">
+
+			</div>			
+			<div id="feed" data-role="content" data-theme="a">
+
+			</div>
+			<div data-role="footer" data-theme="a" data-position="fixed" data-id="footerbar">
+				<h1>2012 &copy; Copyright FM-World</h1>
+			</div>
+		</div>
+		<script type="text/javascript" language=javascript>			
+			
+			function update_rss() {	
+			
+			$.ajax({
+			type: "GET",
+			url: "http://www.fm-world.it/atom",
+			dataType: "xml",
+	        beforeSend:function(){$.mobile.showPageLoadingMsg();},
+	        complete:function(){$.mobile.hidePageLoadingMsg();$("ul").listview('refresh');},
+			success: function(xml) {
+			$('#feed').empty();
+			var str="";
+			var divstr="";
+			var i=0;
+			str+="<ul data-role=\"listview\" data-theme=\"a\">";
+			
+			$(xml).find('entry').each(function(){
+			i++;
+			var title = $(this).find('title').text()
+			var link = $(this).find('link').text()
+			var desc = $(this).find('content').text()
+			var img = "http://www.fm-world.it/wp-content/themes/fmworld2012/timthumb.php?src="+$(this).find('enclosure').attr('url')+"&w=80&h=80"
+			//str+="<li><a href='"+link+"' >"+title+"</a></li>";
+			str+="<li class=\"ui-li-has-thumb\" ><img class=\"ui-corner-all ui-li-thumb licont\" src=\""+img+"\" /><a href=\"#art"+i.toString()+"\" data-transition=\"none\" style=\"white-space: normal; position:relative; padding-top: 10px;\">"+title+"</a></li>";
+			//str+="<li><a href='"+link+"'>"+desc.substring(0,100)+"...</a></li>";
+			
+			divstr+="<div data-role=\"page\" data-theme=\"a\" id=\"art"+i.toString()+"\">";
+			divstr+="<div style='margin: 3px 10px;'><h3 style='float: left;'>FM-World News</h3>";
+			divstr+="<a href='#' style='float: right;' data-role='button' class='ui-btn-right' data-icon='refresh' onclick='history.back(); return false'>back</a>";
+			divstr+="<div style='clear: both;'></div></div>";
+			//divstr+="<a href='#' data-role='button' class='ui-btn-left' data-icon='arrow-l' onclick=\"history.back(); return false\">Back</a></div>";
+			divstr+="<div data-role=\"content\"><h2>"+title+"</h2><br />"+desc+"</div>";
+			divstr+="<div data-role=\"footer\" data-position=\"fixed\"><h1>2012 &copy; Copyright FM-World</h1></div>";
+			divstr+="</div>";
+			
+			
+			}); //close each(
+			str+="</ul>";
+			$('#feed').html(str);
+			$("ul").listview();  
+			$('#page').after(divstr);
+			
+			$.mobile.hidePageLoadingMsg();
+			
+			}
+			}); //close $.ajax(
+			$("#msg").ajaxError(function(event, request, settings){
+			$(this).append("<div class=\"ui-bar ui-bar-e\"><h3>Error requesting page " + settings.url + "</h3></div>");
+			});
+			
+			}
+			
+			$(document).ready(update_rss());
+			
+			</script>
+	</body>
+</html>
