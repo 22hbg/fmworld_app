@@ -1,94 +1,132 @@
-
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>FM-World News</title>
-		<link rel="stylesheet" href="themes/fmworld.css" />
-		<link rel="stylesheet" href="jquery.mobile.structure-1.1.0.min.css" />
-		<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-		<script src="jquery.mobile-1.1.0.min.js"></script>
-		<style>
-		.ui-page {
-			-webkit-backface-visibility: hidden;
-			-webkit-transform:translate3d(0,0,0);
-		}
-		</style>
+<head>
+    <title>FM-World News</title>
+    <meta name="viewport" content="width = device-width, initial-scale = 1, user-scalable = no" />
+    <script type="text/javascript" src="js/jquery.js"></script>
+	<link rel="stylesheet" href="css/jquery.mobile.structure-1.1.1.min.css" />
+	<link rel="stylesheet" href="css/fmworld.css" />
+    <script type="text/javascript" src="js/jquery.mobile-1.1.1.min.js"></script>
+    <script type="text/javascript" src="js/fmworld_rss.js"></script>
+	<script type="text/javascript" src="js/jquery.jfeed.js"></script>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript">
 
-	</head>	
-	<body>
-		<div id="page" data-role="page" data-theme="a">
-			<div style='margin: 3px 10px;'>
-			<h3 style="float: left;">FM-World News</h3>
-			<a href='#' style="float: right;" data-role='button' class='ui-btn-right' data-icon='refresh' onclick="update_rss(); return false">Aggiorna</a>
-			<div style="clear: both;"></div>
-			</div>
-			<div id="msg" data-theme="a">
+        $(document).ready(function() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(success, error);
+                } else {
+                    error('Geolocation not supported');
+                }
+		});  
 
-			</div>			
-			<div id="feed" data-role="content" data-theme="a">
 
-			</div>
-			<div data-role="footer" data-theme="a" data-position="fixed" data-id="footerbar">
-				<h1>2012 &copy; Copyright FM-World</h1>
+        function success(position) {
+          var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+          var myOptions = {
+            zoom: 15,
+            center: latlng,
+            mapTypeControl: false,
+            navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL},
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+          };
+          var mapcanvas = $('#mapcanvas');
+          var map = new google.maps.Map(mapcanvas[0], myOptions);
+          var marker = new google.maps.Marker({
+              position: latlng, 
+              map: map, 
+              title:"I am here!"
+          });
+        }
+        
+
+        function error(msg) {
+          var errMsg = typeof msg == 'string' ? msg : "Geolocation failed";
+          $('#msg').html(errMsg);
+        }
+    </script>
+</head>
+<body onload="init()">
+<!-- begin first page -->
+<section id="page1" data-role="page" data-theme="a">
+    <header data-role="header">
+        <h1>FM-World News</h1>
+		<a href="#about" data-icon="info" data-transition="flip" class="ui-btn-right">About</a>
+    </header>
+
+    <div data-role="content" class="content">
+	<div class="ui-grid-a">
+		<div class="ui-block-a"><a href="javascript:emptyFeed();refreshFeed()" data-theme="a" data-icon="refresh" data-role="button">Aggiorna</a></div>
+		<div class="ui-block-b"><a href="#contact" data-theme="a" data-icon="alert" data-role="button">Segnala</a></div>
+	</div>
+        <div id="feed" data-inset="true" data-theme="a">
+        </div>
+    </div>
+
+    <footer data-role="footer">
+        <h2>&copy; 2012 - 22HBG S.r.l. </h2>
+    </footer>
+</section>
+<!-- end first page -->
+
+<section id="articolo" data-role="page" data-theme="a">
+   <header data-role="header">
+        		<h1 id="title_art">&nbsp;</h1>
+			<a href="#page1" data-icon="back" data-role="back" data-transition="slide" data-direction="reverse">Back</a>
+    </header>
+
+    <div data-role="content" class="content">
+		<div id="testo" style="font-size: 13px; font-family: Verdana; padding: 10px; text-align: justify;">
+		</div>
+    </div>
+
+    <footer data-role="footer">
+        <h2>&copy; 2012 - 22HBG S.r.l. </h2>
+    </footer>
+</section>
+
+<section id="contact" data-role="page" data-theme="a">
+	<header data-role="header">
+			<h1 id="title_art">Segnala</h1>
+			<a href="#page1" data-icon="back" data-role="back" data-transition="slide" data-direction="reverse">Back</a>
+	</header>
+
+    <div data-role="content" class="content">
+		<div id="form" style="font-size: 13px; font-family: Verdana; padding: 10px; text-align: justify;">
+			<div data-role="fieldcontain">
+		    <div id="msg"></div>
+            <div id="mapcanvas" style="height: 100px; width: 100%; margin: 5px;"></div>
+			<form action="php/send.php" method="post">
+					 <input placeholder="Nome" type="text" name="name" id="name" value=""  />
+					 <input placeholder="E-Mail" type="text" name="email" id="email" value=""  />
+					 <textarea placeholder="Messaggio" style="height: 150px;" name="messaggio" id="messaggio" rows="10"></textarea>
+					 <input type="submit" value="Invia" />
+				</form>
 			</div>
 		</div>
-		<script type="text/javascript" language=javascript>			
-			
-			function update_rss() {	
-			
-			$.ajax({
-			type: "GET",
-			url: "http://www.fm-world.it/atom",
-			dataType: "xml",
-	        beforeSend:function(){$.mobile.showPageLoadingMsg();},
-	        complete:function(){$.mobile.hidePageLoadingMsg();$("ul").listview('refresh');},
-			success: function(xml) {
-			$('#feed').empty();
-			var str="";
-			var divstr="";
-			var i=0;
-			str+="<ul data-role=\"listview\" data-theme=\"a\">";
-			
-			$(xml).find('entry').each(function(){
-			i++;
-			var title = $(this).find('title').text()
-			var link = $(this).find('link').text()
-			var desc = $(this).find('content').text()
-			var img = "http://www.fm-world.it/wp-content/themes/fmworld2012/timthumb.php?src="+$(this).find('enclosure').attr('url')+"&w=80&h=80"
-			//str+="<li><a href='"+link+"' >"+title+"</a></li>";
-			str+="<li class=\"ui-li-has-thumb\" ><img class=\"ui-corner-all ui-li-thumb licont\" src=\""+img+"\" /><a href=\"#art"+i.toString()+"\" data-transition=\"none\" style=\"white-space: normal; position:relative; padding-top: 10px;\">"+title+"</a></li>";
-			//str+="<li><a href='"+link+"'>"+desc.substring(0,100)+"...</a></li>";
-			
-			divstr+="<div data-role=\"page\" data-theme=\"a\" id=\"art"+i.toString()+"\">";
-			divstr+="<div style='margin: 3px 10px;'><h3 style='float: left;'>FM-World News</h3>";
-			divstr+="<a href='#' style='float: right;' data-role='button' class='ui-btn-right' data-icon='refresh' onclick='history.back(); return false'>back</a>";
-			divstr+="<div style='clear: both;'></div></div>";
-			//divstr+="<a href='#' data-role='button' class='ui-btn-left' data-icon='arrow-l' onclick=\"history.back(); return false\">Back</a></div>";
-			divstr+="<div data-role=\"content\"><h2>"+title+"</h2><br />"+desc+"</div>";
-			divstr+="<div data-role=\"footer\" data-position=\"fixed\"><h1>2012 &copy; Copyright FM-World</h1></div>";
-			divstr+="</div>";
-			
-			
-			}); //close each(
-			str+="</ul>";
-			$('#feed').html(str);
-			$("ul").listview();  
-			$('#page').after(divstr);
-			
-			$.mobile.hidePageLoadingMsg();
-			
-			}
-			}); //close $.ajax(
-			$("#msg").ajaxError(function(event, request, settings){
-			$(this).append("<div class=\"ui-bar ui-bar-e\"><h3>Error requesting page " + settings.url + "</h3></div>");
-			});
-			
-			}
-			
-			$(document).ready(update_rss());
-			
-			</script>
-	</body>
+    </div>
+
+    <footer data-role="footer">
+        <h2>&copy; 2012 - 22HBG S.r.l. </h2>
+    </footer>
+</section>	
+
+<section id="about" data-role="page" data-theme="a">
+	<header data-role="header">
+			<h1 id="title_art">FM-World</h1>
+			<a href="#page1" data-icon="back" data-role="back" data-transition="slide" data-direction="reverse">Back</a>
+	</header>
+
+    <div data-role="content" class="content">
+		<div id="about" style="font-size: 13px; font-family: Verdana; padding: 10px; text-align: justify;">
+		
+		</div>
+    </div>
+
+    <footer data-role="footer">
+        <h2>&copy; 2012 - 22HBG S.r.l. </h2>
+    </footer>
+</section>	
+
+    </body>
 </html>
